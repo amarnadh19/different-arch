@@ -52,7 +52,7 @@ name: 'Terraform Pipeline'
 on:
   workflow_call:
     inputs:
-      working_directory:
+      project_directory:
         required: true
         type: string
         description: "The path to the terraform code"
@@ -77,7 +77,7 @@ jobs:
       run:
         shell: bash
         # Use the input variable here
-        working-directory: ${{ inputs.working_directory }}
+        working-directory: "./${{ inputs.project_directory }}/iac_code/terraform/"
 
     steps:
       - name: Checkout

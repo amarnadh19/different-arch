@@ -122,8 +122,16 @@ jobs:
             #-backend-config="use_lockfile=true"
 
       - name: Terraform Plan
-        run: terraform plan -input=false
+        run: terraform plan -out=tfplan
+
+            # --- THE S3 GATE  to store plan artifact ---
+      - name: Save Plan to S3
+        run: |
+                # We use the GitHub Run ID to keep the filename unique
+                aws s3 cp tfplan s3://${{ secrets.S3_STATE_BUCKET }}/${{ github.run_id }}/tfplan
+
+      - name: Download Plan from S3
+        run: aws s3 cp s3://${{ secrets.S3_STATE_BUCKET }}/${{ github.run_id }}/tfplan tfplan
 
       - name: Terraform Apply
-        #if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve -input=false
+        run: terraform apply -auto-approve tfplan

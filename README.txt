@@ -1,0 +1,1 @@
+https://vardhmanandroid2015.medium.com/event-driven-pipeline-serverless-resources-on-cloud-build-once-process-anything-3a0bf1057c2a

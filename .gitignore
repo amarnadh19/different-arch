@@ -1,0 +1,30 @@
+*.idea
+# Local .terraform directory (contains provider plugins and modules)
+.terraform/
+
+# Hide plan files (these often contain sensitive data)
+*.tfplan
+
+# Ignore state files
+# These should be stored in a remote backend (S3/GCS) with locking
+*.tfstate
+*.tfstate.*
+
+# Ignore sensitive variables
+# Files ending in .tfvars often contain secrets/API keys
+*.tfvars
+*.tfvars.json
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# Ignore log files
+crash.log
+terraform.log

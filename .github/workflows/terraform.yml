@@ -63,8 +63,12 @@ on:
         required: true
         type: string
       environment:
-        required: false
-        type: string
+        required: true
+        type: choice
+        options:
+          - dev
+          - nonprod
+          - prod
         default: 'dev'
     secrets:
       AWS_ACCESS_KEY_ID:

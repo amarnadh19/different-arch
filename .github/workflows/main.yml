@@ -14,9 +14,9 @@ on:
         options:
           - Project1
           - Project2
-      env:
+      environment:
         description: 'Environment of the project'
-        required: false
+        required: true
         default: 'dev'
         type: string
 
@@ -39,7 +39,7 @@ jobs:
       # Logic: If manual trigger, use input. If push trigger, use default path.
       project_directory: ${{ github.event.inputs.project_directory }} #|| './Project1/iac_code/terraform/' }}
       aws_region: ${{ github.event.inputs.aws_region }}
-      env: ${{ github.event.inputs.env }}
+      env: ${{ github.event.inputs.environment }}
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

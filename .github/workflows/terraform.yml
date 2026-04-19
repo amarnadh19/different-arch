@@ -19,7 +19,7 @@ jobs:
         shell: bash
         # Update this path if your terraform files are in a subfolder 
         # based on your previous screenshot (e.g., ./different-arch/Project1/iac_code/terraform)
-        working-directory: ./
+        working-directory: /Project1/iac_code/terraform/
 
     steps:
     - name: Checkout

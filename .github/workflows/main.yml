@@ -1,15 +1,15 @@
 name: Main Orchestrator
 
 on:
-  push:
-    branches: [ "main" ]
+#  push:
+#    branches: [ "main" ]
   # This adds the "Run workflow" button in GitHub Actions tab
   workflow_dispatch:
     inputs:
       working_directory:
         description: 'Path to Terraform code'
         required: true
-        #default: './Project1/iac_code/terraform/'
+        default: './Project1/iac_code/terraform/'
         type: string
 
 jobs:

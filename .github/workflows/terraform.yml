@@ -1,53 +1,57 @@
-#name: 'Terraform'
+#name: 'Terraform Pipeline'
 #
 #on:
-#  push:
-#    branches: [ "main" ]
-#  pull_request:
-#
-#permissions:
-#  contents: read
+#  workflow_call:
+#    inputs:
+#      project_directory:
+#        required: true
+#        type: string
+#        description: "The path to the terraform code"
+#      env:
+#        required : true
+#        type: string
+#        description: "environment"
+#      aws_region:
+#        required: true
+#        type: string
+#    secrets:
+#      AWS_ACCESS_KEY_ID:
+#        required: true
+#      AWS_SECRET_ACCESS_KEY:
+#        required: true
 #
 #jobs:
 #  terraform:
-#    name: 'Terraform'
 #    runs-on: ubuntu-latest
-#    environment: production
 #
 #    defaults:
 #      run:
 #        shell: bash
-#        working-directory: ./Project1/iac_code/terraform/
+#        # Use the input variable here
+#        working-directory: "./${{ inputs.project_directory }}/iac_code/terraform/"
 #
 #    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v4
+#      - name: Checkout
+#        uses: actions/checkout@v4
 #
-#    # 1. Configure AWS Credentials using GitHub Secrets
-#    - name: Configure AWS Credentials
-#      uses: aws-actions/configure-aws-credentials@v4
-#      with:
-#        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-#        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#        aws-region: ap-south-1 # Change this to your preferred region
+#      - name: Configure AWS Credentials
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ${{ inputs.aws_region }}
 #
-#    # 2. Setup Terraform (Removed the credentials_token)
-#    - name: Setup Terraform
-#      uses: hashicorp/setup-terraform@v3 # Updated to v3 for better Node20 support
+#      - name: Setup Terraform
+#        uses: hashicorp/setup-terraform@v3
 #
-#    - name: Terraform Init
-#      run: terraform init
+#      - name: Terraform Init
+#        run: terraform init
 #
-#    - name: Terraform Plan
-#      run: terraform plan -input=false
-#
-#    # - name: Terraform Apply
-#    #   # Fixed the ref check (removed the extra double quotes inside the string)
-#    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-#    #   run: terraform apply -auto-approve -input=false
+#      - name: Terraform Plan
+#        run: terraform plan
 
 
-name: 'Terraform Pipeline'
+name: 'Terraform Reusable Pipeline'
 
 on:
   workflow_call:
@@ -55,18 +59,21 @@ on:
       project_directory:
         required: true
         type: string
-        description: "The path to the terraform code"
-      env:
-        required : true
-        type: string
-        description: "environment"
       aws_region:
         required: true
         type: string
+      environment:
+        required: false
+        type: string
+        default: 'dev'
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
+        required: true
+      S3_STATE_BUCKET:
+        required: true
+      DYNAMODB_LOCK_TABLE:
         required: true
 
 jobs:
@@ -76,8 +83,8 @@ jobs:
     defaults:
       run:
         shell: bash
-        # Use the input variable here
-        working-directory: "./${{ inputs.project_directory }}/iac_code/terraform/"
+        # Matches your monorepo structure
+        working-directory: "./${{ inputs.project_directory }}/iac_code/terraform"
 
     steps:
       - name: Checkout
@@ -93,8 +100,26 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      # This is the critical step for dynamic state management
       - name: Terraform Init
-        run: terraform init
+        run: |
+          # Convert project name to lowercase for consistent S3 paths
+          PROJECT_LOWER=$(echo "${{ inputs.project_directory }}" | tr '[:upper:]' '[:lower:]')
+          
+          # Construct the dynamic key: e.g., dev/project1/tf.state
+          STATE_KEY="${{ inputs.environment }}/${PROJECT_LOWER}/tf.state"
+          
+          echo "Initializing Terraform with S3 Key: $STATE_KEY"
+          
+          terraform init \
+            -backend-config="bucket=${{ secrets.S3_STATE_BUCKET }}" \
+            -backend-config="key=$STATE_KEY" \
+            -backend-config="region=${{ inputs.aws_region }}" \
+            -backend-config="dynamodb_table=${{ secrets.DYNAMODB_LOCK_TABLE }}"
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -input=false
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false

@@ -111,6 +111,9 @@ jobs:
           
           echo "Initializing Terraform with S3 Key: $STATE_KEY"
           
+          echo "Targeting Bucket: ${{ secrets.S3_STATE_BUCKET }}"
+          echo "Targeting Key: $STATE_KEY"
+          
           terraform init \
             -backend-config="bucket=${{ secrets.S3_STATE_BUCKET }}" \
             -backend-config="key=$STATE_KEY" \

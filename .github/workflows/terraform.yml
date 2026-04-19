@@ -1,49 +1,93 @@
-name: 'Terraform'
+#name: 'Terraform'
+#
+#on:
+#  push:
+#    branches: [ "main" ]
+#  pull_request:
+#
+#permissions:
+#  contents: read
+#
+#jobs:
+#  terraform:
+#    name: 'Terraform'
+#    runs-on: ubuntu-latest
+#    environment: production
+#
+#    defaults:
+#      run:
+#        shell: bash
+#        working-directory: ./Project1/iac_code/terraform/
+#
+#    steps:
+#    - name: Checkout
+#      uses: actions/checkout@v4
+#
+#    # 1. Configure AWS Credentials using GitHub Secrets
+#    - name: Configure AWS Credentials
+#      uses: aws-actions/configure-aws-credentials@v4
+#      with:
+#        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+#        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#        aws-region: ap-south-1 # Change this to your preferred region
+#
+#    # 2. Setup Terraform (Removed the credentials_token)
+#    - name: Setup Terraform
+#      uses: hashicorp/setup-terraform@v3 # Updated to v3 for better Node20 support
+#
+#    - name: Terraform Init
+#      run: terraform init
+#
+#    - name: Terraform Plan
+#      run: terraform plan -input=false
+#
+#    # - name: Terraform Apply
+#    #   # Fixed the ref check (removed the extra double quotes inside the string)
+#    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+#    #   run: terraform apply -auto-approve -input=false
+
+
+name: 'Terraform Pipeline'
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-
-permissions:
-  contents: read
+  workflow_call:
+    inputs:
+      working_directory:
+        required: true
+        type: string
+        description: "The path to the terraform code"
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
 
 jobs:
   terraform:
-    name: 'Terraform'
     runs-on: ubuntu-latest
-    environment: production
 
     defaults:
       run:
         shell: bash
-        # Update this path if your terraform files are in a subfolder 
-        # based on your previous screenshot (e.g., ./different-arch/Project1/iac_code/terraform)
-        working-directory: ./Project1/iac_code/terraform/
+        # Use the input variable here
+        working-directory: ${{ inputs.working_directory }}
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # 1. Configure AWS Credentials using GitHub Secrets
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ap-south-1 # Change this to your preferred region
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
 
-    # 2. Setup Terraform (Removed the credentials_token)
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3 # Updated to v3 for better Node20 support
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-    - name: Terraform Init
-      run: terraform init
+      - name: Terraform Init
+        run: terraform init
 
-    - name: Terraform Plan
-      run: terraform plan -input=false
-
-    # - name: Terraform Apply
-    #   # Fixed the ref check (removed the extra double quotes inside the string)
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   run: terraform apply -auto-approve -input=false
+      - name: Terraform Plan
+        run: terraform plan

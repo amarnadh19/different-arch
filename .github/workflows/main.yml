@@ -1,0 +1,23 @@
+name: Main Orchestrator
+
+on:
+  push:
+    branches: [ "main" ]
+  # This adds the "Run workflow" button in GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      working_directory:
+        description: 'Path to Terraform code'
+        required: true
+        default: './Project1/iac_code/terraform/'
+        type: string
+
+jobs:
+  call-terraform:
+    uses: ./.github/workflows/terraform.yml
+    with:
+      # Logic: If manual trigger, use input. If push trigger, use default path.
+      working_directory: ${{ github.event.inputs.working_directory || './Project1/iac_code/terraform/' }}
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

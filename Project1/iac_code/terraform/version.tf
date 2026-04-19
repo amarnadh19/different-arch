@@ -8,6 +8,6 @@ terraform{
 }
 
 provider "aws" {
-	profile = "ouraws"
-	region = "ap-south-1"
+	#profile = "ouraws"
+	#region = "ap-south-1"
 }

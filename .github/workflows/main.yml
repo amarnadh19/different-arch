@@ -16,7 +16,7 @@ on:
           - Project2
       env:
         description: 'Environment of the project'
-        required: true
+        required: false
         default: 'dev'
         type: string
 
